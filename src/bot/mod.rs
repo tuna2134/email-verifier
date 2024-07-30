@@ -139,6 +139,9 @@ pub async fn run_bot(state: Arc<AppState>, token: String) -> anyhow::Result<()> 
                 continue;
             }
         };
+
+        tracing::debug!("Received event: {:?}", event);
+
         if let Event::InteractionCreate(interaction) = event {
             let clone = Arc::clone(&framework);
             let state_clone = Arc::clone(&state);
