@@ -20,6 +20,7 @@ use url::Url;
 
 #[command]
 #[description = "認証"]
+#[required_permissions(MANAGE_ROLES)]
 async fn auth(
     ctx: &mut SlashContext<Arc<AppState>>,
     #[description = "メールアドレスのパターン"] email_pattern: String,
