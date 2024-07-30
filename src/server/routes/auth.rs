@@ -1,9 +1,8 @@
 use crate::server::result::AppResult;
-use crate::utils::state::AppState;
 
 use std::env;
 
-use axum::extract::{Query, State};
+use axum::extract::Query;
 use once_cell::sync::Lazy;
 use serde::Deserialize;
 use twilight_http::Client as HttpClient;

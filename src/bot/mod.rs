@@ -78,15 +78,12 @@ pub async fn run_bot(state: Arc<AppState>, token: String) -> anyhow::Result<()> 
                 continue;
             }
         };
-        match event {
-            Event::InteractionCreate(interaction) => {
-                let clone = Arc::clone(&framework);
-                tokio::spawn(async move {
-                    let inner = interaction.0;
-                    clone.process(inner).await;
-                });
-            }
-            _ => {}
+        if let Event::InteractionCreate(interaction) = event {
+            let clone = Arc::clone(&framework);
+            tokio::spawn(async move {
+                let inner = interaction.0;
+                clone.process(inner).await;
+            });
         }
     }
 
