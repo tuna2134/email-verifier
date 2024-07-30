@@ -2,6 +2,7 @@ use crate::db::verify as db;
 use crate::utils::state::AppState;
 
 use std::sync::Arc;
+use std::env;
 
 use twilight_gateway::{Event, Intents, Shard, ShardId};
 use twilight_model::application::interaction::{Interaction, InteractionData, InteractionType};
@@ -14,6 +15,8 @@ use twilight_model::id::{marker::RoleMarker, Id};
 use twilight_util::builder::embed::EmbedBuilder;
 use uuid::Uuid;
 use vesper::prelude::*;
+use once_cell::sync::Lazy;
+use url::Url;
 
 #[command]
 #[description = "認証"]
@@ -59,6 +62,8 @@ async fn auth(
     Ok(())
 }
 
+static BASE_AUTH_URL: Lazy<String> = Lazy::new(|| env::var("AUTH_PAGE_URL").unwrap());
+
 async fn create_interaction(state: Arc<AppState>, interaction: Interaction) -> anyhow::Result<()> {
     if interaction.kind == InteractionType::MessageComponent {
         if let Some(InteractionData::MessageComponent(data)) = &interaction.data {
@@ -75,7 +80,9 @@ async fn create_interaction(state: Arc<AppState>, interaction: Interaction) -> a
                         ),
                     );
                 };
-                let url = crate::utils::get_oauth_url(code.to_string()).await?;
+                let mut url = Url::parse(BASE_AUTH_URL.as_str())?;
+                url.query_pairs_mut()
+                    .append_pair("code", &code.to_string());
                 state.interaction()
                     .create_response(
                         interaction.id,
@@ -91,7 +98,7 @@ async fn create_interaction(state: Arc<AppState>, interaction: Interaction) -> a
                                             style: ButtonStyle::Link,
                                             label: Some("認証ページへ".to_string()),
                                             custom_id: None,
-                                            url: Some(url),
+                                            url: Some(url.to_string()),
                                             emoji: None,
                                             disabled: false,
                                         })],

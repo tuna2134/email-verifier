@@ -5,12 +5,13 @@ use crate::utils::state::AppState;
 use std::env;
 use std::sync::Arc;
 
-use axum::extract::{Query, State};
+use axum::extract::{Json, State};
 use once_cell::sync::Lazy;
 use regex::Regex;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use twilight_http::request::AuditLogReason;
 use twilight_http::Client as HttpClient;
+use twilight_model::user::CurrentUser;
 use twilight_model::id::Id;
 
 static DISCORD_CLIENT_ID: Lazy<String> = Lazy::new(|| env::var("DISCORD_CLIENT_ID").unwrap());
@@ -23,9 +24,15 @@ pub async fn main_path() -> AppResult<String> {
 }
 
 #[derive(Deserialize)]
-pub struct CallbackQuery {
+pub struct RequestVerifyDiscord {
     code: String,
     state: String,
+}
+
+#[derive(Serialize)]
+pub struct ResponseVerifyDiscord {
+    status: i32,
+    user: CurrentUser,
 }
 
 #[derive(Deserialize, Debug)]
@@ -37,10 +44,10 @@ pub struct DiscordTokenResponse {
     scope: String,
 }
 
-pub async fn callback(
-    Query(query): Query<CallbackQuery>,
+pub async fn verify_discord(
     State(state): State<Arc<AppState>>,
-) -> AppResult<String> {
+    Json(query): Json<RequestVerifyDiscord>,
+) -> AppResult<Json<ResponseVerifyDiscord>> {
     let client = reqwest::Client::new();
     let response: DiscordTokenResponse = client
         .post("https://discord.com/api/v10/oauth2/token")
@@ -93,5 +100,8 @@ pub async fn callback(
             .await?;
     }
 
-    Ok("ok".to_string())
+    Ok(Json(ResponseVerifyDiscord {
+        status: 200,
+        user,
+    }))
 }
