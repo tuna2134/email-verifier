@@ -1,11 +1,17 @@
+use crate::db::verify as db;
 use crate::server::result::AppResult;
+use crate::utils::state::AppState;
 
 use std::env;
+use std::sync::Arc;
 
-use axum::extract::Query;
+use axum::extract::{Query, State};
 use once_cell::sync::Lazy;
+use regex::Regex;
 use serde::Deserialize;
+use twilight_http::request::AuditLogReason;
 use twilight_http::Client as HttpClient;
+use twilight_model::id::Id;
 use url::Url;
 
 static DISCORD_CLIENT_ID: Lazy<String> = Lazy::new(|| env::var("DISCORD_CLIENT_ID").unwrap());
@@ -42,7 +48,10 @@ pub struct DiscordTokenResponse {
     scope: String,
 }
 
-pub async fn callback(Query(query): Query<CallbackQuery>) -> AppResult<String> {
+pub async fn callback(
+    Query(query): Query<CallbackQuery>,
+    State(state): State<Arc<AppState>>,
+) -> AppResult<String> {
     let client = reqwest::Client::new();
     let response: DiscordTokenResponse = client
         .post("https://discord.com/api/v10/oauth2/token")
@@ -62,7 +71,38 @@ pub async fn callback(Query(query): Query<CallbackQuery>) -> AppResult<String> {
 
     let http = HttpClient::new(format!("Bearer {}", response.access_token));
     let user = http.current_user().await?.model().await?;
-    tracing::debug!("{:?}", user);
+    let (user_id, guild_id) = {
+        let cache = state.cache.lock().await;
+        let data = cache.get(&format!("auth:{}", query.state)).unwrap();
+        if let Some((user_id, guild_id)) = data.split_once(':') {
+            (user_id.to_string(), guild_id.to_string())
+        } else {
+            return Err(anyhow::anyhow!("Invalid data").into());
+        }
+    };
+    let user_id = user_id.parse::<u64>().unwrap();
+    if user.id.get() != user_id {
+        return Err(anyhow::anyhow!("Invalid user").into());
+    }
+    let guild_id = guild_id.parse::<i64>().unwrap();
+    if let Some((email_pattern, role_id)) = db::get_guild(&state.pool, guild_id).await? {
+        if user.email.is_none() {
+            return Err(anyhow::anyhow!("User has no email").into());
+        }
+        let pattern = Regex::new(&email_pattern)?;
+        if !pattern.is_match(user.email.as_ref().unwrap()) {
+            return Err(anyhow::anyhow!("Invalid email").into());
+        }
+        state
+            .http
+            .add_guild_member_role(
+                Id::new(guild_id as u64),
+                Id::new(user_id),
+                Id::new(role_id as u64),
+            )
+            .reason("Verified email")?
+            .await?;
+    }
 
     Ok("ok".to_string())
 }

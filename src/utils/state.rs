@@ -2,13 +2,13 @@ use std::{collections::HashMap, sync::Arc};
 
 use sqlx::SqlitePool;
 use tokio::sync::Mutex;
-use twilight_http::Client as HttpClient;
+use twilight_http::{client::InteractionClient, Client as HttpClient};
 use twilight_model::id::{marker::ApplicationMarker, Id};
 
 pub struct AppState {
     pub pool: Arc<SqlitePool>,
     pub http: Arc<HttpClient>,
-    cache: Arc<Mutex<HashMap<String, String>>>,
+    pub cache: Arc<Mutex<HashMap<String, String>>>,
     pub application_id: Id<ApplicationMarker>,
 }
 
@@ -27,5 +27,9 @@ impl AppState {
             cache: Arc::new(Mutex::new(HashMap::new())),
             application_id: application.id,
         })
+    }
+
+    pub fn interaction(&self) -> InteractionClient {
+        self.http.interaction(self.application_id)
     }
 }

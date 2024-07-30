@@ -17,3 +17,14 @@ pub async fn add_guild(
 
     Ok(())
 }
+
+pub async fn get_guild(pool: &SqlitePool, guild_id: i64) -> anyhow::Result<Option<(String, i64)>> {
+    let row = sqlx::query!(
+        "SELECT email_pattern, role_id FROM email_verify WHERE guild_id = ?",
+        guild_id
+    )
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(row.map(|row| (row.email_pattern, row.role_id)))
+}
