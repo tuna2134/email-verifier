@@ -5,7 +5,7 @@ use std::env;
 
 use axum::{routing::{get, post}, Router, http::{HeaderValue, Method}};
 use tokio::net::TcpListener;
-use tower_http::cors::CorsLayer;
+use tower_http::cors::{CorsLayer, Any};
 
 mod result;
 mod routes;
@@ -18,7 +18,8 @@ pub async fn run_server(state: Arc<AppState>) -> anyhow::Result<()> {
         .layer(
             CorsLayer::new()
                 .allow_origin(allow_origin.parse::<HeaderValue>().unwrap())
-                .allow_methods([Method::GET, Method::POST]),
+                .allow_methods([Method::GET, Method::POST])
+                .allow_headers(Any),
         )
         .with_state(Arc::clone(&state));
 
