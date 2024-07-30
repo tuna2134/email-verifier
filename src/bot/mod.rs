@@ -62,49 +62,46 @@ async fn auth(
 async fn create_interaction(state: Arc<AppState>, interaction: Interaction) -> anyhow::Result<()> {
     if interaction.kind == InteractionType::MessageComponent {
         if let Some(InteractionData::MessageComponent(data)) = &interaction.data {
-            match data.custom_id.as_str() {
-                "auth" => {
-                    let code = Uuid::new_v4();
-                    {
-                        let mut cache = state.cache.lock().await;
-                        cache.insert(
-                            format!("auth:{}", code),
-                            format!(
-                                "{}:{}",
-                                interaction.member.clone().unwrap().user.unwrap().id,
-                                interaction.guild_id.unwrap()
-                            ),
-                        );
-                    };
-                    let url = crate::utils::get_oauth_url(code.to_string()).await?;
-                    state.interaction()
-                        .create_response(
-                            interaction.id,
-                            &interaction.token,
-                            &InteractionResponse {
-                                kind: InteractionResponseType::ChannelMessageWithSource,
-                                data: Some(InteractionResponseData {
-                                    content: Some("認証を開始します。\n以下のボタンをクリックして飛んでください。".to_string()),
-                                    flags: Some(MessageFlags::EPHEMERAL),
-                                    components: Some(vec![
-                                        Component::ActionRow(ActionRow {
-                                            components: vec![Component::Button(Button {
-                                                style: ButtonStyle::Link,
-                                                label: Some("認証ページへ".to_string()),
-                                                custom_id: None,
-                                                url: Some(url),
-                                                emoji: None,
-                                                disabled: false,
-                                            })],
-                                        }),
-                                    ]),
-                                    ..Default::default()
-                                }),
-                            },
-                        )
-                        .await?;
-                }
-                _ => {}
+            if data.custom_id.as_str() == "auth" {
+                let code = Uuid::new_v4();
+                {
+                    let mut cache = state.cache.lock().await;
+                    cache.insert(
+                        format!("auth:{}", code),
+                        format!(
+                            "{}:{}",
+                            interaction.member.clone().unwrap().user.unwrap().id,
+                            interaction.guild_id.unwrap()
+                        ),
+                    );
+                };
+                let url = crate::utils::get_oauth_url(code.to_string()).await?;
+                state.interaction()
+                    .create_response(
+                        interaction.id,
+                        &interaction.token,
+                        &InteractionResponse {
+                            kind: InteractionResponseType::ChannelMessageWithSource,
+                            data: Some(InteractionResponseData {
+                                content: Some("認証を開始します。\n以下のボタンをクリックして飛んでください。".to_string()),
+                                flags: Some(MessageFlags::EPHEMERAL),
+                                components: Some(vec![
+                                    Component::ActionRow(ActionRow {
+                                        components: vec![Component::Button(Button {
+                                            style: ButtonStyle::Link,
+                                            label: Some("認証ページへ".to_string()),
+                                            custom_id: None,
+                                            url: Some(url),
+                                            emoji: None,
+                                            disabled: false,
+                                        })],
+                                    }),
+                                ]),
+                                ..Default::default()
+                            }),
+                        },
+                    )
+                    .await?;
             }
         }
     }
