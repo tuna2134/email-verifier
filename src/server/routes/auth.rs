@@ -63,7 +63,7 @@ pub async fn verify_discord(
         .await?
         .json()
         .await?;
-    tracing::debug!("{:?}", response);
+    tracing::info!("{:?}", response);
 
     let http = HttpClient::new(format!("Bearer {}", response.access_token));
     let user = http.current_user().await?.model().await?;
