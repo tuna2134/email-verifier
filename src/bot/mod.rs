@@ -125,7 +125,8 @@ pub async fn run_bot(state: Arc<AppState>, token: String) -> anyhow::Result<()> 
             .build(),
     );
 
-    framework.register_global_commands().await?;
+    let commands = framework.twilight_commands();
+    state.interaction().set_global_commands(&commands).await?;
 
     loop {
         let event = match shard.next_event().await {

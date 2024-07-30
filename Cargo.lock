@@ -2611,6 +2611,7 @@ dependencies = [
  "tracing",
  "twilight-http",
  "twilight-model",
+ "twilight-util",
  "twilight-validate",
  "vesper-macros",
 ]
