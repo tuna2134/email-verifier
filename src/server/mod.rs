@@ -11,7 +11,6 @@ mod routes;
 pub async fn run_server(state: Arc<AppState>) -> anyhow::Result<()> {
     let app = Router::new()
         .route("/auth", get(routes::auth::main_path))
-        .route("/auth/oauth", get(routes::auth::get_oauth_url))
         .route("/auth/callback/discord", get(routes::auth::callback))
         .with_state(Arc::clone(&state));
 

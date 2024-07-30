@@ -12,7 +12,6 @@ use serde::Deserialize;
 use twilight_http::request::AuditLogReason;
 use twilight_http::Client as HttpClient;
 use twilight_model::id::Id;
-use url::Url;
 
 static DISCORD_CLIENT_ID: Lazy<String> = Lazy::new(|| env::var("DISCORD_CLIENT_ID").unwrap());
 static BASE_REDIRECT_URL: Lazy<String> = Lazy::new(|| env::var("BASE_REDIRECT_URL").unwrap());
@@ -21,16 +20,6 @@ static DISCORD_CLIENT_SECRET: Lazy<String> =
 
 pub async fn main_path() -> AppResult<String> {
     Ok("Hello, world!".to_string())
-}
-
-pub async fn get_oauth_url() -> AppResult<String> {
-    let mut url = Url::parse("https://discord.com/oauth2/authorize")?;
-    url.query_pairs_mut()
-        .append_pair("client_id", &DISCORD_CLIENT_ID)
-        .append_pair("redirect_uri", &format!("{}/discord", *BASE_REDIRECT_URL))
-        .append_pair("response_type", "code")
-        .append_pair("scope", "identify email");
-    Ok(url.to_string())
 }
 
 #[derive(Deserialize)]

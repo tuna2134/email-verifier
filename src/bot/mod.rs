@@ -76,6 +76,7 @@ async fn create_interaction(state: Arc<AppState>, interaction: Interaction) -> a
                             ),
                         );
                     };
+                    let url = crate::utils::get_oauth_url(code.to_string()).await?;
                     state.interaction()
                         .create_response(
                             interaction.id,
@@ -91,10 +92,7 @@ async fn create_interaction(state: Arc<AppState>, interaction: Interaction) -> a
                                                 style: ButtonStyle::Link,
                                                 label: Some("認証ページへ".to_string()),
                                                 custom_id: None,
-                                                url: Some(format!(
-                                                    "http://localhost:8000/auth?code={}",
-                                                    code
-                                                )),
+                                                url: Some(url),
                                                 emoji: None,
                                                 disabled: false,
                                             })],
