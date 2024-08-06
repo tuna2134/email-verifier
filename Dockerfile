@@ -2,14 +2,14 @@ FROM rust:1.79-slim AS builder
 
 WORKDIR /src/builder
 
+ENV SQLX_OFFLINE true
 COPY . .
-RUN --mount=type=cache,target=/src/builder/target/ cargo build --release && \
-    cp /src/builder/target/release/email-verifier /tmp/email-verifier
+RUN cargo build --release
 
 FROM gcr.io/distroless/cc-debian12
 
 WORKDIR /src/app
 
-COPY --from=builder /tmp/email-verifier .
+COPY --from=builder /src/builder/email-verifier .
 
-CMD ["/src/app/cloud-shell"]
+CMD ["/src/app/email-verifier"]
