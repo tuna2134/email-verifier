@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT email_pattern, role_id FROM email_verify WHERE guild_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "email_pattern",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "role_id",
+        "ordinal": 1,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "0ec25d310c7e28d30fc1e36994603b08b068e3ef862d62e627b55c14a93c1d4c"
+}
