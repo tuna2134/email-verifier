@@ -2,7 +2,7 @@ FROM rust:1.79-slim AS builder
 
 WORKDIR /src/builder
 
-ENV SQLX_OFFLINE true
+ENV SQLX_OFFLINE=true
 COPY . .
 RUN cargo build --release
 
