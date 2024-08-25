@@ -63,7 +63,7 @@ pub async fn callback(
     let user = http.current_user().await?.model().await?;
 
     let token = Token::new(user.id.get())?;
-    let nonce = BASE64_URL_SAFE_NO_PAD.encode(&token.nonce);
+    let nonce = BASE64_URL_SAFE_NO_PAD.encode(token.nonce);
     db::set_token(&state.pool, user.id.get() as i64, nonce).await?;
 
     Ok(Json(ResponseDashboardCallback {

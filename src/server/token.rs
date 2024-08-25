@@ -26,7 +26,7 @@ impl Token {
         buffer[..8].copy_from_slice(&self.user_id.to_be_bytes());
         buffer[8] = b'.';
         buffer[9..].copy_from_slice(&self.nonce);
-        Ok(BASE64_URL_SAFE_NO_PAD.encode(&buffer))
+        Ok(BASE64_URL_SAFE_NO_PAD.encode(buffer))
     }
 
     pub fn parse(token: String) -> anyhow::Result<Self> {
@@ -54,7 +54,7 @@ impl FromRequestParts<AppState> for Token {
             .map_err(|_| anyhow::anyhow!("Missing authorization header"))?;
         let token = Token::parse(bearer.token().to_string())?;
 
-        let nonce = BASE64_URL_SAFE_NO_PAD.encode(&token.nonce);
+        let nonce = BASE64_URL_SAFE_NO_PAD.encode(token.nonce);
 
         if db::exist_token(&state.pool, token.user_id as i64, nonce).await? {
             return Err(anyhow::anyhow!("Invalid token").into());
