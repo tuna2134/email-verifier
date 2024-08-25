@@ -20,7 +20,15 @@ pub async fn run_server(state: Arc<AppState>) -> anyhow::Result<()> {
     let app = Router::new()
         .route("/auth", get(routes::auth::main_path))
         .route("/auth/verify/discord", post(routes::auth::verify_discord))
-        .route("/dashboard/exchange_token", post(routes::dashboard::callback))
+        .route(
+            "/dashboard/exchange_token",
+            post(routes::dashboard::callback),
+        )
+        .route("/dashboard/users/@me", get(routes::dashboard::get_me))
+        .route(
+            "/dashboard/users/@me/guilds",
+            get(routes::dashboard::get_me_guilds),
+        )
         .layer(
             CorsLayer::new()
                 .allow_origin(allow_origin.parse::<HeaderValue>().unwrap())

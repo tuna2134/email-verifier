@@ -9,6 +9,8 @@ use axum_extra::{
 use base64::prelude::*;
 use getrandom::getrandom;
 
+use std::sync::Arc;
+
 pub struct Token {
     pub user_id: u64,
     pub nonce: [u8; 32],
@@ -41,12 +43,12 @@ impl Token {
 }
 
 #[async_trait]
-impl FromRequestParts<AppState> for Token {
+impl FromRequestParts<Arc<AppState>> for Token {
     type Rejection = AppError;
 
     async fn from_request_parts(
         parts: &mut Parts,
-        state: &AppState,
+        state: &Arc<AppState>,
     ) -> Result<Self, Self::Rejection> {
         let TypedHeader(Authorization(bearer)) = parts
             .extract::<TypedHeader<Authorization<Bearer>>>()
