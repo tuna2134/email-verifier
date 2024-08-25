@@ -1,9 +1,10 @@
 use crate::db::verify as db;
 use crate::utils::state::AppState;
 
-use std::sync::Arc;
 use std::env;
+use std::sync::Arc;
 
+use once_cell::sync::Lazy;
 use twilight_gateway::{Event, Intents, Shard, ShardId};
 use twilight_model::application::interaction::{Interaction, InteractionData, InteractionType};
 use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle, Component};
@@ -13,10 +14,9 @@ use twilight_model::http::interaction::{
 };
 use twilight_model::id::{marker::RoleMarker, Id};
 use twilight_util::builder::embed::EmbedBuilder;
+use url::Url;
 use uuid::Uuid;
 use vesper::prelude::*;
-use once_cell::sync::Lazy;
-use url::Url;
 
 #[command]
 #[description = "認証"]
@@ -82,8 +82,7 @@ async fn create_interaction(state: Arc<AppState>, interaction: Interaction) -> a
                     );
                 };
                 let mut url = Url::parse(BASE_AUTH_URL.as_str())?;
-                url.query_pairs_mut()
-                    .append_pair("code", &code.to_string());
+                url.query_pairs_mut().append_pair("code", &code.to_string());
                 state.interaction()
                     .create_response(
                         interaction.id,

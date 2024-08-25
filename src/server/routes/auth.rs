@@ -11,11 +11,11 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use twilight_http::request::AuditLogReason;
 use twilight_http::Client as HttpClient;
-use twilight_model::user::CurrentUser;
 use twilight_model::id::Id;
+use twilight_model::user::CurrentUser;
 
 static DISCORD_CLIENT_ID: Lazy<String> = Lazy::new(|| env::var("DISCORD_CLIENT_ID").unwrap());
-static BASE_REDIRECT_URL: Lazy<String> = Lazy::new(|| env::var("BASE_REDIRECT_URL").unwrap());
+static BASE_URL: Lazy<String> = Lazy::new(|| env::var("BASE_URL").unwrap());
 static DISCORD_CLIENT_SECRET: Lazy<String> =
     Lazy::new(|| env::var("DISCORD_CLIENT_SECRET").unwrap());
 
@@ -57,7 +57,10 @@ pub async fn verify_discord(
             ("client_secret", DISCORD_CLIENT_SECRET.clone()),
             ("grant_type", "authorization_code".to_string()),
             ("code", query.code),
-            ("redirect_uri", format!("{}/discord", *BASE_REDIRECT_URL)),
+            (
+                "redirect_uri",
+                format!("{}/auth/callback/discord", *BASE_URL),
+            ),
         ])
         .send()
         .await?
@@ -100,8 +103,5 @@ pub async fn verify_discord(
             .await?;
     }
 
-    Ok(Json(ResponseVerifyDiscord {
-        status: 200,
-        user,
-    }))
+    Ok(Json(ResponseVerifyDiscord { status: 200, user }))
 }

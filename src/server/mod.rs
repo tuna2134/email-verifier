@@ -1,20 +1,26 @@
 use crate::utils::state::AppState;
 
-use std::sync::Arc;
 use std::env;
+use std::sync::Arc;
 
-use axum::{routing::{get, post}, Router, http::{HeaderValue, Method}};
+use axum::{
+    http::{HeaderValue, Method},
+    routing::{get, post},
+    Router,
+};
 use tokio::net::TcpListener;
-use tower_http::cors::{CorsLayer, Any};
+use tower_http::cors::{Any, CorsLayer};
 
 mod result;
 mod routes;
+mod token;
 
 pub async fn run_server(state: Arc<AppState>) -> anyhow::Result<()> {
     let allow_origin = env::var("ALLOW_ORIGIN")?;
     let app = Router::new()
         .route("/auth", get(routes::auth::main_path))
         .route("/auth/verify/discord", post(routes::auth::verify_discord))
+        .route("/dashboard/callback", post(routes::dashboard::callback))
         .layer(
             CorsLayer::new()
                 .allow_origin(allow_origin.parse::<HeaderValue>().unwrap())
