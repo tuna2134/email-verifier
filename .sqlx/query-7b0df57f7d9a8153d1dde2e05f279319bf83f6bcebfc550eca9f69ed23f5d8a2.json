@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT access_token\n        FROM token\n        WHERE user_id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "access_token",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "7b0df57f7d9a8153d1dde2e05f279319bf83f6bcebfc550eca9f69ed23f5d8a2"
+}
