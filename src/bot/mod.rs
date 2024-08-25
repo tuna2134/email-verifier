@@ -63,7 +63,7 @@ async fn auth(
     Ok(())
 }
 
-static BASE_AUTH_URL: Lazy<String> = Lazy::new(|| env::var("AUTH_PAGE_URL").unwrap());
+static BASE_AUTH_URL: Lazy<String> = Lazy::new(|| format!("{}/auth", env::var("AUTH_URL").unwrap()));
 
 async fn create_interaction(state: Arc<AppState>, interaction: Interaction) -> anyhow::Result<()> {
     if interaction.kind == InteractionType::MessageComponent {

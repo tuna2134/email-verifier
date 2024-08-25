@@ -16,7 +16,7 @@ mod routes;
 mod token;
 
 pub async fn run_server(state: Arc<AppState>) -> anyhow::Result<()> {
-    let allow_origin = env::var("ALLOW_ORIGIN")?;
+    let allow_origin = env::var("BASE_URL")?;
     let app = Router::new()
         .route("/auth", get(routes::auth::main_path))
         .route("/auth/verify/discord", post(routes::auth::verify_discord))
