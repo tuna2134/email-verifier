@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        INSERT INTO token (user_id, nonce)\n        VALUES ($1, $2)\n        ON CONFLICT (user_id)\n        DO UPDATE SET nonce = $2\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "d7c19fb67f257e606f5676c54280a1cdedd84fe6b4637eb9270c187fa0cf6732"
+}
