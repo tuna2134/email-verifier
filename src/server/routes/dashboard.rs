@@ -6,12 +6,16 @@ use crate::utils::state::AppState;
 use std::env;
 use std::sync::Arc;
 
-use axum::extract::{Json, State};
+use axum::extract::{Json, Path, State};
 use base64::prelude::*;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use twilight_http::Client as HttpClient;
+use twilight_model::guild::Permissions;
+use twilight_model::guild::Role;
+use twilight_model::id::Id;
 use twilight_model::user::{CurrentUser, CurrentUserGuild};
+use twilight_util::permission_calculator::PermissionCalculator;
 
 static DISCORD_CLIENT_ID: Lazy<String> = Lazy::new(|| env::var("DISCORD_CLIENT_ID").unwrap());
 static BASE_URL: Lazy<String> = Lazy::new(|| env::var("BASE_URL").unwrap());
@@ -133,4 +137,59 @@ pub async fn get_me_guilds(
     };
 
     Ok(Json(guilds))
+}
+
+async fn permission_checker(
+    state: Arc<AppState>,
+    guild_id: u64,
+    user_id: u64,
+) -> anyhow::Result<bool> {
+    let member = state
+        .http
+        .guild_member(Id::new(guild_id), Id::new(user_id))
+        .await?
+        .model()
+        .await?;
+    let guild_roles = state.http.roles(Id::new(guild_id)).await?.model().await?;
+    let member_roles = guild_roles
+        .iter()
+        .filter(|role| member.roles.contains(&role.id))
+        .map(|role| (role.id, role.permissions))
+        .collect::<Vec<_>>();
+    let calculator = PermissionCalculator::new(
+        Id::new(guild_id),
+        Id::new(user_id),
+        Permissions::empty(),
+        &member_roles,
+    );
+    if calculator.root().contains(Permissions::ADMINISTRATOR) {
+        return Ok(true);
+    }
+    Ok(false)
+}
+
+pub async fn get_guild_roles(
+    State(state): State<Arc<AppState>>,
+    token: Token,
+    Path(guild_id): Path<u64>,
+) -> AppResult<Json<Vec<Role>>> {
+    if !permission_checker(Arc::clone(&state), guild_id, token.user_id).await? {
+        return Err(anyhow::anyhow!("You don't have permission to access this guild").into());
+    }
+    let roles = {
+        let mut cache = state.cache.lock().await;
+        let data = cache.get(&format!("dashboard:guild:{}:roles", guild_id));
+        if let Some(data) = data {
+            serde_json::from_str(data)?
+        } else {
+            let roles = state.http.roles(Id::new(guild_id)).await?.model().await?;
+            cache.insert(
+                format!("dashboard:guild:{}:roles", guild_id),
+                serde_json::to_string(&roles)?,
+            );
+            roles
+        }
+    };
+
+    Ok(Json(roles))
 }

@@ -29,6 +29,10 @@ pub async fn run_server(state: Arc<AppState>) -> anyhow::Result<()> {
             "/dashboard/users/@me/guilds",
             get(routes::dashboard::get_me_guilds),
         )
+        .route(
+            "/dashboard/guilds/{guild_id}/roles",
+            get(routes::dashboard::get_guild_roles),
+        )
         .layer(
             CorsLayer::new()
                 .allow_origin(allow_origin.parse::<HeaderValue>().unwrap())
