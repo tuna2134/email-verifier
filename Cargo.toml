@@ -27,4 +27,3 @@ twilight-model = "0.15.4"
 twilight-util = { version = "0.15.4", features = ["builder", "permission-calculator"] }
 url = "2.5.2"
 uuid = { version = "1.10.0", features = ["v4"] }
-vesper = { version = "0.13.0", features = ["bulk"] }
