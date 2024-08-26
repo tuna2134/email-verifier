@@ -58,7 +58,7 @@ impl FromRequestParts<Arc<AppState>> for Token {
 
         let nonce = BASE64_URL_SAFE_NO_PAD.encode(token.nonce);
 
-        if db::exist_token(&state.pool, token.user_id as i64, nonce).await? {
+        if !db::exist_token(&state.pool, token.user_id as i64, nonce).await? {
             return Err(anyhow::anyhow!("Invalid token").into());
         }
 

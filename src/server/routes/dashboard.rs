@@ -1,4 +1,5 @@
 use crate::db::token as db;
+use crate::db::verify as verify_db;
 use crate::server::result::AppResult;
 use crate::server::token::Token;
 use crate::utils::state::AppState;
@@ -10,11 +11,15 @@ use axum::extract::{Json, Path, State};
 use base64::prelude::*;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
+use sparkle_interactions::builder::component::{ButtonBuilder, ComponentsBuilder};
 use twilight_http::Client as HttpClient;
+use twilight_model::channel::message::component::ButtonStyle;
+use twilight_model::channel::{Channel, ChannelType};
 use twilight_model::guild::Permissions;
 use twilight_model::guild::Role;
 use twilight_model::id::Id;
 use twilight_model::user::{CurrentUser, CurrentUserGuild};
+use twilight_util::builder::embed::EmbedBuilder;
 use twilight_util::permission_calculator::PermissionCalculator;
 
 static DISCORD_CLIENT_ID: Lazy<String> = Lazy::new(|| env::var("DISCORD_CLIENT_ID").unwrap());
@@ -190,6 +195,98 @@ pub async fn get_guild_roles(
             roles
         }
     };
+    let roles = roles
+        .iter()
+        .filter(|role| role.name != "@everyone")
+        .cloned()
+        .collect();
 
     Ok(Json(roles))
+}
+
+pub async fn get_guild_text_channels(
+    State(state): State<Arc<AppState>>,
+    token: Token,
+    Path(guild_id): Path<u64>,
+) -> AppResult<Json<Vec<Channel>>> {
+    if !permission_checker(Arc::clone(&state), guild_id, token.user_id).await? {
+        return Err(anyhow::anyhow!("You don't have permission to access this guild").into());
+    }
+    let channels = {
+        let mut cache = state.cache.lock().await;
+        let data = cache.get(&format!("dashboard:guild:{}:channels", guild_id));
+        if let Some(data) = data {
+            serde_json::from_str(data)?
+        } else {
+            let channels = state
+                .http
+                .guild_channels(Id::new(guild_id))
+                .await?
+                .model()
+                .await?;
+            cache.insert(
+                format!("dashboard:guild:{}:channels", guild_id),
+                serde_json::to_string(&channels)?,
+            );
+            channels
+        }
+    };
+    let channels = channels
+        .iter()
+        .filter(|channel| channel.kind == ChannelType::GuildText)
+        .cloned()
+        .collect();
+
+    Ok(Json(channels))
+}
+
+#[derive(Deserialize, Debug)]
+pub struct GuildGeneralSettings {
+    email_pattern: String,
+    role_id: String,
+    channel_id: String,
+}
+
+pub async fn set_guild_general_settings(
+    State(state): State<Arc<AppState>>,
+    token: Token,
+    Path(guild_id): Path<u64>,
+    Json(body): Json<GuildGeneralSettings>,
+) -> AppResult<()> {
+    println!("{:?}", body);
+    let role_id = body.role_id.parse::<i64>()?;
+    let channel_id = body.channel_id.parse::<u64>()?;
+
+    if !permission_checker(Arc::clone(&state), guild_id, token.user_id).await? {
+        return Err(anyhow::anyhow!("You don't have permission to access this guild").into());
+    }
+
+    verify_db::add_guild(
+        &state.pool,
+        guild_id as i64,
+        body.email_pattern.clone(),
+        role_id,
+    )
+    .await?;
+
+    let embed = EmbedBuilder::new()
+        .title("認証パネル")
+        .description("ボタンをクリックすると認証が始まります。")
+        .build();
+    let components = ComponentsBuilder::new()
+        .buttons(vec![ButtonBuilder::with_custom_id(
+            "auth".to_string(),
+            "認証する".to_string(),
+            ButtonStyle::Success,
+        )
+        .build()])
+        .build();
+    state
+        .http
+        .create_message(Id::new(channel_id))
+        .embeds(&[embed])?
+        .components(&components)?
+        .await?;
+
+    Ok(())
 }

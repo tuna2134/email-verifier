@@ -469,6 +469,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+ "sparkle_interactions",
  "sqlx",
  "tokio",
  "tower-http",
@@ -1874,6 +1875,17 @@ checksum = "ce305eb0b4296696835b71df73eb912e0f1ffd2556a501fcede6e0c50349191c"
 dependencies = [
  "libc",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "sparkle_interactions"
+version = "0.15.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf673219b32e5ef67e28b86f5f5eeaf5a76fb0e697a5e0367612a2af7c6ddf47"
+dependencies = [
+ "twilight-http",
+ "twilight-model",
+ "twilight-validate",
 ]
 
 [[package]]

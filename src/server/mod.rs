@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use axum::{
     http::{HeaderValue, Method},
-    routing::{get, post},
+    routing::{get, post, put},
     Router,
 };
 use tokio::net::TcpListener;
@@ -30,13 +30,21 @@ pub async fn run_server(state: Arc<AppState>) -> anyhow::Result<()> {
             get(routes::dashboard::get_me_guilds),
         )
         .route(
-            "/dashboard/guilds/{guild_id}/roles",
+            "/dashboard/guilds/:guild_id/roles",
             get(routes::dashboard::get_guild_roles),
+        )
+        .route(
+            "/dashboard/guilds/:guild_id/channels",
+            get(routes::dashboard::get_guild_text_channels),
+        )
+        .route(
+            "/dashboard/guilds/:guild_id/general_settings",
+            put(routes::dashboard::set_guild_general_settings),
         )
         .layer(
             CorsLayer::new()
                 .allow_origin(allow_origin.parse::<HeaderValue>().unwrap())
-                .allow_methods([Method::GET, Method::POST])
+                .allow_methods([Method::GET, Method::POST, Method::PUT])
                 .allow_headers(Any),
         )
         .with_state(Arc::clone(&state));

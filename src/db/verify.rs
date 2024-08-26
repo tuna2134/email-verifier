@@ -7,7 +7,12 @@ pub async fn add_guild(
     role_id: i64,
 ) -> anyhow::Result<()> {
     sqlx::query!(
-        "INSERT INTO email_verify (guild_id, email_pattern, role_id) VALUES (?, ?, ?)",
+        r#"
+        INSERT INTO email_verify (guild_id, email_pattern, role_id)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (guild_id)
+        DO UPDATE SET email_pattern = $2, role_id = $3
+        "#,
         guild_id,
         email_pattern,
         role_id

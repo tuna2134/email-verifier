@@ -11,7 +11,7 @@ pub async fn set_token(
         INSERT INTO token (user_id, nonce, access_token)
         VALUES ($1, $2, $3)
         ON CONFLICT (user_id)
-        DO UPDATE SET nonce = $2 AND access_token = $3
+        DO UPDATE SET nonce = $2, access_token = $3
         "#,
         user_id,
         nonce,
