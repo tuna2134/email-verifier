@@ -7,7 +7,11 @@ use crate::utils::state::AppState;
 use std::env;
 use std::sync::Arc;
 
-use axum::extract::{Json, Path, State};
+use axum::{
+    extract::{Json, Path, State},
+    http::StatusCode,
+    response::IntoResponse,
+};
 use base64::prelude::*;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
@@ -15,6 +19,7 @@ use sparkle_interactions::builder::component::{ButtonBuilder, ComponentsBuilder}
 use twilight_http::Client as HttpClient;
 use twilight_model::channel::message::component::ButtonStyle;
 use twilight_model::channel::{Channel, ChannelType};
+use twilight_model::guild::Guild;
 use twilight_model::guild::Permissions;
 use twilight_model::guild::Role;
 use twilight_model::id::Id;
@@ -171,6 +176,44 @@ async fn permission_checker(
         return Ok(true);
     }
     Ok(false)
+}
+
+#[derive(Serialize)]
+pub enum GetGuildResponse {
+    NotFound(String),
+    Ok(Guild),
+}
+
+pub async fn get_guild(
+    State(state): State<Arc<AppState>>,
+    _token: Token,
+    Path(guild_id): Path<u64>,
+) -> AppResult<impl IntoResponse> {
+    let guild = {
+        let mut cache = state.cache.lock().await;
+        let data = cache.get(&format!("dashboard:guild:{}", guild_id));
+        if let Some(data) = data {
+            serde_json::from_str(data)?
+        } else {
+            let result = state.http.guild(Id::new(guild_id)).await;
+            let response = if let Err(error) = result {
+                return Ok((
+                    StatusCode::NOT_FOUND,
+                    Json(GetGuildResponse::NotFound("Not found".to_string())),
+                ));
+            } else {
+                result?
+            };
+            let guild = response.model().await?;
+            cache.insert(
+                format!("dashboard:guild:{}", guild_id),
+                serde_json::to_string(&guild)?,
+            );
+            guild
+        }
+    };
+
+    Ok((StatusCode::OK, Json(GetGuildResponse::Ok(guild))))
 }
 
 pub async fn get_guild_roles(

@@ -30,6 +30,10 @@ pub async fn run_server(state: Arc<AppState>) -> anyhow::Result<()> {
             get(routes::dashboard::get_me_guilds),
         )
         .route(
+            "/dashboard/guilds/:guild_id",
+            get(routes::dashboard::get_guild),
+        )
+        .route(
             "/dashboard/guilds/:guild_id/roles",
             get(routes::dashboard::get_guild_roles),
         )
@@ -41,6 +45,7 @@ pub async fn run_server(state: Arc<AppState>) -> anyhow::Result<()> {
             "/dashboard/guilds/:guild_id/general_settings",
             put(routes::dashboard::set_guild_general_settings),
         )
+        .route("/invite_url", get(routes::invite_url))
         .layer(
             CorsLayer::new()
                 .allow_origin(allow_origin.parse::<HeaderValue>().unwrap())
