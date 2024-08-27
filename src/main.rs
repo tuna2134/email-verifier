@@ -17,8 +17,8 @@ async fn main() -> anyhow::Result<()> {
     let state = Arc::new(
         AppState::setup(
             env::var("DATABASE_URL")?,
-            token.clone(),
             env::var("REDIS_URL")?,
+            token.clone(),
         )
         .await?,
     );

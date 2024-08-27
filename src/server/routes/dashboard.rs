@@ -73,7 +73,6 @@ pub async fn callback(
         .await?
         .json()
         .await?;
-    tracing::info!("{:?}", response);
 
     let http = HttpClient::new(format!("Bearer {}", response.access_token));
     let user = http.current_user().await?.model().await?;
@@ -207,7 +206,7 @@ pub async fn get_guild(
             serde_json::from_str(&data)?
         } else {
             let result = state.http.guild(Id::new(guild_id)).await;
-            let response = if let Err(error) = result {
+            let response = if let Err(_error) = result {
                 return Ok((
                     StatusCode::NOT_FOUND,
                     Json(GetGuildResponse::NotFound("Not found".to_string())),

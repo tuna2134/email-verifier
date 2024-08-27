@@ -25,6 +25,7 @@ impl AppState {
 
         let http = HttpClient::new(discord_token);
         let application = http.current_user_application().await?.model().await?;
+        tracing::info!("Get application id: {}", application.id);
 
         let manager = RedisConnectionManager::new(redis_uri)?;
         let redis = Pool::builder().build(manager).await?;
