@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT email_pattern, role_id FROM email_verify WHERE guild_id = ?",
+  "query": "SELECT email_pattern, role_id, channel_id FROM email_verify WHERE guild_id = ?",
   "describe": {
     "columns": [
       {
@@ -12,6 +12,11 @@
         "name": "role_id",
         "ordinal": 1,
         "type_info": "Integer"
+      },
+      {
+        "name": "channel_id",
+        "ordinal": 2,
+        "type_info": "Integer"
       }
     ],
     "parameters": {
@@ -19,8 +24,9 @@
     },
     "nullable": [
       false,
+      false,
       false
     ]
   },
-  "hash": "0ec25d310c7e28d30fc1e36994603b08b068e3ef862d62e627b55c14a93c1d4c"
+  "hash": "c38e44babc73e15e964da895f4b16319de946f254a24af30fac4026383945873"
 }
