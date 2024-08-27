@@ -1,8 +1,7 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{sync::Arc};
 
 use bb8_redis::{bb8::Pool, RedisConnectionManager};
 use sqlx::SqlitePool;
-use tokio::sync::Mutex;
 use twilight_http::{client::InteractionClient, Client as HttpClient};
 use twilight_model::id::{marker::ApplicationMarker, Id};
 
