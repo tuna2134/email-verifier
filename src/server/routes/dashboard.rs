@@ -1,6 +1,6 @@
 use crate::db::token as db;
 use crate::db::verify as verify_db;
-use crate::server::result::AppResult;
+use crate::server::result::{APIError, APIResult, AppResult};
 use crate::server::token::Token;
 use crate::utils::state::AppState;
 
@@ -283,7 +283,7 @@ pub async fn get_guild_text_channels(
     Ok(Json(channels))
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct GuildGeneralSettings {
     email_pattern: String,
     role_id: String,
@@ -296,7 +296,6 @@ pub async fn set_guild_general_settings(
     Path(guild_id): Path<u64>,
     Json(body): Json<GuildGeneralSettings>,
 ) -> AppResult<()> {
-    println!("{:?}", body);
     let role_id = body.role_id.parse::<i64>()?;
     let channel_id = body.channel_id.parse::<u64>()?;
 
@@ -309,6 +308,7 @@ pub async fn set_guild_general_settings(
         guild_id as i64,
         body.email_pattern.clone(),
         role_id,
+        channel_id as i64,
     )
     .await?;
 
@@ -332,4 +332,26 @@ pub async fn set_guild_general_settings(
         .await?;
 
     Ok(())
+}
+
+pub async fn get_guild_general_settings(
+    State(state): State<Arc<AppState>>,
+    token: Token,
+    Path(guild_id): Path<u64>,
+) -> APIResult<Json<GuildGeneralSettings>> {
+    if !permission_checker(Arc::clone(&state), guild_id, token.user_id).await? {
+        return Err(APIError::forbitten(
+            "You don't have permission to access this guild",
+        ));
+    }
+
+    let (email_pattern, role_id, channel_id) = verify_db::get_guild(&state.pool, guild_id as i64)
+        .await?
+        .ok_or_else(|| APIError::notfound("Not found"))?;
+
+    Ok(Json(GuildGeneralSettings {
+        email_pattern,
+        role_id: role_id.to_string(),
+        channel_id: channel_id.to_string(),
+    }))
 }

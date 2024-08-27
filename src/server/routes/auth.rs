@@ -84,7 +84,7 @@ pub async fn verify_discord(
         return Err(anyhow::anyhow!("Invalid user").into());
     }
     let guild_id = guild_id.parse::<i64>().unwrap();
-    if let Some((email_pattern, role_id)) = db::get_guild(&state.pool, guild_id).await? {
+    if let Some((email_pattern, role_id, _)) = db::get_guild(&state.pool, guild_id).await? {
         if user.email.is_none() {
             return Err(anyhow::anyhow!("User has no email").into());
         }

@@ -46,6 +46,10 @@ pub async fn run_server(state: Arc<AppState>) -> anyhow::Result<()> {
             "/dashboard/guilds/:guild_id/general_settings",
             put(routes::dashboard::set_guild_general_settings),
         )
+        .route(
+            "/dashboard/guilds/:guild_id/general_settings",
+            get(routes::dashboard::get_guild_general_settings),
+        )
         .route("/invite_url", get(routes::invite_url))
         .layer(
             CorsLayer::new()
