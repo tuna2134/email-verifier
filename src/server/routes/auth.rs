@@ -6,6 +6,7 @@ use std::env;
 use std::sync::Arc;
 
 use axum::extract::{Json, State};
+use bb8_redis::redis::AsyncCommands;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -71,8 +72,8 @@ pub async fn verify_discord(
     let http = HttpClient::new(format!("Bearer {}", response.access_token));
     let user = http.current_user().await?.model().await?;
     let (user_id, guild_id) = {
-        let cache = state.cache.lock().await;
-        let data = cache.get(&format!("auth:{}", query.state)).unwrap();
+        let mut conn = state.redis.get().await?;
+        let data: String = conn.get(&format!("auth:{}", query.state)).await?;
         if let Some((user_id, guild_id)) = data.split_once(':') {
             (user_id.to_string(), guild_id.to_string())
         } else {
@@ -101,6 +102,10 @@ pub async fn verify_discord(
             )
             .reason("Verified email")?
             .await?;
+        {
+            let mut conn = state.redis.get().await?;
+            conn.del(&format!("auth:{}", query.state)).await?;
+        }
     }
 
     Ok(Json(ResponseVerifyDiscord { status: 200, user }))

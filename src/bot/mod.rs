@@ -3,6 +3,7 @@ use crate::utils::state::AppState;
 use std::env;
 use std::sync::Arc;
 
+use bb8_redis::redis::AsyncCommands;
 use once_cell::sync::Lazy;
 use twilight_gateway::{Event, Intents, Shard, ShardId};
 use twilight_model::application::interaction::{Interaction, InteractionData, InteractionType};
@@ -23,15 +24,17 @@ async fn create_interaction(state: Arc<AppState>, interaction: Interaction) -> a
             if data.custom_id.as_str() == "auth" {
                 let code = Uuid::new_v4();
                 {
-                    let mut cache = state.cache.lock().await;
-                    cache.insert(
+                    let mut conn = state.redis.get().await?;
+                    conn.set_ex::<_, _, ()>(
                         format!("auth:{}", code),
                         format!(
                             "{}:{}",
                             interaction.member.clone().unwrap().user.unwrap().id,
                             interaction.guild_id.unwrap()
                         ),
-                    );
+                        60 * 5,
+                    )
+                    .await?;
                 };
                 let mut url = Url::parse(BASE_AUTH_URL.as_str())?;
                 url.query_pairs_mut().append_pair("code", &code.to_string());

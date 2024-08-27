@@ -14,7 +14,14 @@ async fn main() -> anyhow::Result<()> {
 
     let token = env::var("DISCORD_TOKEN")?;
 
-    let state = Arc::new(AppState::setup(env::var("DATABASE_URL")?, token.clone()).await?);
+    let state = Arc::new(
+        AppState::setup(
+            env::var("DATABASE_URL")?,
+            token.clone(),
+            env::var("REDIS_URL")?,
+        )
+        .await?,
+    );
 
     tokio::spawn(bot::run_bot(Arc::clone(&state), token));
 

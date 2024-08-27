@@ -13,6 +13,7 @@ use axum::{
     response::IntoResponse,
 };
 use base64::prelude::*;
+use bb8_redis::redis::AsyncCommands;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use sparkle_interactions::builder::component::{ButtonBuilder, ComponentsBuilder};
@@ -88,11 +89,13 @@ pub async fn callback(
     .await?;
 
     {
-        let mut cache = state.cache.lock().await;
-        cache.insert(
+        let mut conn = state.redis.get().await?;
+        conn.set_ex::<_, _, ()>(
             format!("dashboard:user:{}", user.id),
             serde_json::to_string(&user)?,
-        );
+            60,
+        )
+        .await?;
     }
 
     Ok(Json(ResponseDashboardCallback {
@@ -106,18 +109,22 @@ pub async fn get_me(
     token: Token,
 ) -> AppResult<Json<CurrentUser>> {
     let user = {
-        let mut cache = state.cache.lock().await;
-        let data = cache.get(&format!("dashboard:user:{}", token.user_id));
+        let mut conn = state.redis.get().await?;
+        let data: Option<String> = conn
+            .get(&format!("dashboard:user:{}", token.user_id))
+            .await?;
         if let Some(data) = data {
-            serde_json::from_str(data)?
+            serde_json::from_str(&data)?
         } else {
             let access_token = db::get_access_token(&state.pool, token.user_id as i64).await?;
             let http = HttpClient::new(format!("Bearer {}", access_token));
             let user = http.current_user().await?.model().await?;
-            cache.insert(
-                format!("dashboard:user:{}", user.id),
+            conn.set_ex::<_, _, ()>(
+                format!("dashboard:user:{}", token.user_id),
                 serde_json::to_string(&user)?,
-            );
+                60,
+            )
+            .await?;
             user
         }
     };
@@ -130,18 +137,22 @@ pub async fn get_me_guilds(
     token: Token,
 ) -> AppResult<Json<Vec<CurrentUserGuild>>> {
     let guilds = {
-        let mut cache = state.cache.lock().await;
-        let data = cache.get(&format!("dashboard:user:guild:{}", token.user_id));
+        let mut conn = state.redis.get().await?;
+        let data: Option<String> = conn
+            .get(&format!("dashboard:user:guild:{}", token.user_id))
+            .await?;
         if let Some(data) = data {
-            serde_json::from_str(data)?
+            serde_json::from_str(&data)?
         } else {
             let access_token = db::get_access_token(&state.pool, token.user_id as i64).await?;
             let http = HttpClient::new(format!("Bearer {}", access_token));
             let guilds = http.current_user_guilds().await?.model().await?;
-            cache.insert(
+            conn.set_ex::<_, _, ()>(
                 format!("dashboard:user:guild:{}", token.user_id),
                 serde_json::to_string(&guilds)?,
-            );
+                60,
+            )
+            .await?;
             guilds
         }
     };
@@ -190,10 +201,10 @@ pub async fn get_guild(
     Path(guild_id): Path<u64>,
 ) -> AppResult<impl IntoResponse> {
     let guild = {
-        let mut cache = state.cache.lock().await;
-        let data = cache.get(&format!("dashboard:guild:{}", guild_id));
+        let mut conn = state.redis.get().await?;
+        let data: Option<String> = conn.get(&format!("dashboard:guild:{}", guild_id)).await?;
         if let Some(data) = data {
-            serde_json::from_str(data)?
+            serde_json::from_str(&data)?
         } else {
             let result = state.http.guild(Id::new(guild_id)).await;
             let response = if let Err(error) = result {
@@ -205,10 +216,12 @@ pub async fn get_guild(
                 result?
             };
             let guild = response.model().await?;
-            cache.insert(
+            conn.set_ex::<_, _, ()>(
                 format!("dashboard:guild:{}", guild_id),
                 serde_json::to_string(&guild)?,
-            );
+                60,
+            )
+            .await?;
             guild
         }
     };
@@ -225,16 +238,20 @@ pub async fn get_guild_roles(
         return Err(anyhow::anyhow!("You don't have permission to access this guild").into());
     }
     let roles = {
-        let mut cache = state.cache.lock().await;
-        let data = cache.get(&format!("dashboard:guild:{}:roles", guild_id));
+        let mut conn = state.redis.get().await?;
+        let data: Option<String> = conn
+            .get(&format!("dashboard:guild:{}:roles", guild_id))
+            .await?;
         if let Some(data) = data {
-            serde_json::from_str(data)?
+            serde_json::from_str(&data)?
         } else {
             let roles = state.http.roles(Id::new(guild_id)).await?.model().await?;
-            cache.insert(
+            conn.set_ex::<_, _, ()>(
                 format!("dashboard:guild:{}:roles", guild_id),
                 serde_json::to_string(&roles)?,
-            );
+                60,
+            )
+            .await?;
             roles
         }
     };
@@ -256,10 +273,12 @@ pub async fn get_guild_text_channels(
         return Err(anyhow::anyhow!("You don't have permission to access this guild").into());
     }
     let channels = {
-        let mut cache = state.cache.lock().await;
-        let data = cache.get(&format!("dashboard:guild:{}:channels", guild_id));
+        let mut conn = state.redis.get().await?;
+        let data: Option<String> = conn
+            .get(&format!("dashboard:guild:{}:channels", guild_id))
+            .await?;
         if let Some(data) = data {
-            serde_json::from_str(data)?
+            serde_json::from_str(&data)?
         } else {
             let channels = state
                 .http
@@ -267,10 +286,12 @@ pub async fn get_guild_text_channels(
                 .await?
                 .model()
                 .await?;
-            cache.insert(
+            conn.set_ex::<_, _, ()>(
                 format!("dashboard:guild:{}:channels", guild_id),
                 serde_json::to_string(&channels)?,
-            );
+                60,
+            )
+            .await?;
             channels
         }
     };
