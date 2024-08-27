@@ -10,6 +10,7 @@ use axum::{
 };
 use tokio::net::TcpListener;
 use tower_http::cors::{Any, CorsLayer};
+use tower_http::trace::TraceLayer;
 
 mod result;
 mod routes;
@@ -52,6 +53,7 @@ pub async fn run_server(state: Arc<AppState>) -> anyhow::Result<()> {
                 .allow_methods([Method::GET, Method::POST, Method::PUT])
                 .allow_headers(Any),
         )
+        .layer(TraceLayer::new_for_http())
         .with_state(Arc::clone(&state));
 
     let listener = TcpListener::bind("0.0.0.0:8000").await?;
