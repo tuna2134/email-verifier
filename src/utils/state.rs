@@ -1,4 +1,4 @@
-use std::{sync::Arc};
+use std::sync::Arc;
 
 use bb8_redis::{bb8::Pool, RedisConnectionManager};
 use sqlx::SqlitePool;
