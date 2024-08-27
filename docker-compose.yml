@@ -1,0 +1,22 @@
+services:
+  backend:
+    image: ghcr.io/tuna2134/email-verifier:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+    - "8000:8000"
+    env_file:
+    - .env
+    networks:
+    - backend
+    depends_on:
+    - redis
+  
+  redis:
+    image: redis:latest
+    networks:
+    - backend
+
+networks:
+  backend:
