@@ -9,8 +9,6 @@ use std::sync::Arc;
 
 use axum::{
     extract::{Json, Path, State},
-    http::StatusCode,
-    response::IntoResponse,
 };
 use base64::prelude::*;
 use bb8_redis::redis::AsyncCommands;
@@ -188,17 +186,11 @@ async fn permission_checker(
     Ok(false)
 }
 
-#[derive(Serialize)]
-pub enum GetGuildResponse {
-    NotFound(String),
-    Ok(Box<Guild>),
-}
-
 pub async fn get_guild(
     State(state): State<Arc<AppState>>,
     _token: Token,
     Path(guild_id): Path<u64>,
-) -> AppResult<impl IntoResponse> {
+) -> APIResult<Json<Guild>> {
     let guild = {
         let mut conn = state.redis.get().await?;
         let data: Option<String> = conn.get(&format!("dashboard:guild:{}", guild_id)).await?;
@@ -207,10 +199,7 @@ pub async fn get_guild(
         } else {
             let result = state.http.guild(Id::new(guild_id)).await;
             let response = if let Err(_error) = result {
-                return Ok((
-                    StatusCode::NOT_FOUND,
-                    Json(GetGuildResponse::NotFound("Not found".to_string())),
-                ));
+                return Err(APIError::notfound("Not found"));
             } else {
                 result?
             };
@@ -225,7 +214,7 @@ pub async fn get_guild(
         }
     };
 
-    Ok((StatusCode::OK, Json(GetGuildResponse::Ok(guild))))
+    Ok(Json(guild))
 }
 
 pub async fn get_guild_roles(
