@@ -7,9 +7,7 @@ use crate::utils::state::AppState;
 use std::env;
 use std::sync::Arc;
 
-use axum::{
-    extract::{Json, Path, State},
-};
+use axum::extract::{Json, Path, State};
 use base64::prelude::*;
 use bb8_redis::redis::AsyncCommands;
 use once_cell::sync::Lazy;
