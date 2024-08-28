@@ -191,7 +191,7 @@ async fn permission_checker(
 #[derive(Serialize)]
 pub enum GetGuildResponse {
     NotFound(String),
-    Ok(Guild),
+    Ok(Box<Guild>),
 }
 
 pub async fn get_guild(
