@@ -1,4 +1,4 @@
-use super::result::AppError;
+use super::result::APIError;
 use crate::db::token as db;
 use crate::utils::state::AppState;
 use axum::{async_trait, extract::FromRequestParts, http::request::Parts, RequestPartsExt};
@@ -44,7 +44,7 @@ impl Token {
 
 #[async_trait]
 impl FromRequestParts<Arc<AppState>> for Token {
-    type Rejection = AppError;
+    type Rejection = APIError;
 
     async fn from_request_parts(
         parts: &mut Parts,
@@ -53,13 +53,13 @@ impl FromRequestParts<Arc<AppState>> for Token {
         let TypedHeader(Authorization(bearer)) = parts
             .extract::<TypedHeader<Authorization<Bearer>>>()
             .await
-            .map_err(|_| anyhow::anyhow!("Missing authorization header"))?;
+            .map_err(|_| APIError::unauthorized("Missing authorization header"))?;
         let token = Token::parse(bearer.token().to_string())?;
 
         let nonce = BASE64_URL_SAFE_NO_PAD.encode(token.nonce);
 
         if !db::exist_token(&state.pool, token.user_id as i64, nonce).await? {
-            return Err(anyhow::anyhow!("Invalid token").into());
+            return Err(APIError::unauthorized("Invalid token").into());
         }
 
         Ok(token)

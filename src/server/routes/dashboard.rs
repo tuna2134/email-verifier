@@ -45,7 +45,7 @@ pub struct ResponseDashboardCallback {
     token: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 pub struct DiscordTokenResponse {
     access_token: String,
     token_type: String,
