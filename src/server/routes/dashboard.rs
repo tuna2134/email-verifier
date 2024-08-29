@@ -1,6 +1,6 @@
 use crate::db::token as db;
 use crate::db::verify as verify_db;
-use crate::server::result::{APIError, APIResult, AppResult};
+use crate::server::result::{APIError, APIResult};
 use crate::server::token::Token;
 use crate::utils::state::AppState;
 
