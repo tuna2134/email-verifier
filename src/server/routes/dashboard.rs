@@ -1,3 +1,4 @@
+use crate::db::mail_address as mail_db;
 use crate::db::token as db;
 use crate::db::verify as verify_db;
 use crate::server::result::{APIError, APIResult};
@@ -367,4 +368,80 @@ pub async fn get_guild_general_settings(
         role_id: role_id.to_string(),
         channel_id: channel_id.to_string(),
     }))
+}
+
+#[derive(Deserialize)]
+pub struct RequestAddMailAddress {
+    mail: String,
+}
+
+#[derive(Serialize)]
+pub struct ResponseAddMailAddress {
+    id: i64,
+}
+
+pub async fn add_mail_address(
+    State(state): State<Arc<AppState>>,
+    token: Token,
+    Path(guild_id): Path<u64>,
+    Json(body): Json<RequestAddMailAddress>,
+) -> APIResult<Json<ResponseAddMailAddress>> {
+    if !permission_checker(Arc::clone(&state), guild_id, token.user_id).await? {
+        return Err(APIError::forbitten(
+            "You don't have permission to access this guild",
+        ));
+    }
+
+    let mail = body.mail.clone();
+    let mail_id = mail_db::add_mail_address(&state.pool, guild_id as i64, mail).await?;
+
+    Ok(Json(ResponseAddMailAddress { id: mail_id }))
+}
+
+#[derive(Serialize)]
+pub struct ResponseGetAllMailAddress {
+    mail: String,
+    id: i64,
+    guild_id: i64,
+}
+
+pub async fn get_all_mail_addresses(
+    State(state): State<Arc<AppState>>,
+    token: Token,
+    Path(guild_id): Path<u64>,
+) -> APIResult<Json<Vec<ResponseGetAllMailAddress>>> {
+    if !permission_checker(Arc::clone(&state), guild_id, token.user_id).await? {
+        return Err(APIError::forbitten(
+            "You don't have permission to access this guild",
+        ));
+    }
+
+    let mails = mail_db::get_all_email(&state.pool, guild_id as i64).await?;
+
+    Ok(Json(
+        mails
+            .iter()
+            .map(|(id, mail)| ResponseGetAllMailAddress {
+                id: *id,
+                mail: mail.clone(),
+                guild_id: guild_id as i64,
+            })
+            .collect(),
+    ))
+}
+
+pub async fn delete_mail_address(
+    State(state): State<Arc<AppState>>,
+    token: Token,
+    Path((guild_id, mail_id)): Path<(u64, i64)>,
+) -> APIResult<()> {
+    if !permission_checker(Arc::clone(&state), guild_id, token.user_id).await? {
+        return Err(APIError::forbitten(
+            "You don't have permission to access this guild",
+        ));
+    }
+
+    mail_db::delete_mail_address(&state.pool, guild_id as i64, mail_id).await?;
+
+    Ok(())
 }
