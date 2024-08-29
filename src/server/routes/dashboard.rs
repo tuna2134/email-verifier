@@ -53,7 +53,7 @@ pub struct DiscordTokenResponse {
 pub async fn callback(
     State(state): State<Arc<AppState>>,
     Json(query): Json<RequestDashboardCallback>,
-) -> AppResult<Json<ResponseDashboardCallback>> {
+) -> APIResult<Json<ResponseDashboardCallback>> {
     let client = reqwest::Client::new();
     let response: DiscordTokenResponse = client
         .post("https://discord.com/api/v10/oauth2/token")
@@ -102,7 +102,7 @@ pub async fn callback(
 pub async fn get_me(
     State(state): State<Arc<AppState>>,
     token: Token,
-) -> AppResult<Json<CurrentUser>> {
+) -> APIResult<Json<CurrentUser>> {
     let user = {
         let mut conn = state.redis.get().await?;
         let data: Option<String> = conn
@@ -130,7 +130,7 @@ pub async fn get_me(
 pub async fn get_me_guilds(
     State(state): State<Arc<AppState>>,
     token: Token,
-) -> AppResult<Json<Vec<CurrentUserGuild>>> {
+) -> APIResult<Json<Vec<CurrentUserGuild>>> {
     let guilds = {
         let mut conn = state.redis.get().await?;
         let data: Option<String> = conn
@@ -219,9 +219,11 @@ pub async fn get_guild_roles(
     State(state): State<Arc<AppState>>,
     token: Token,
     Path(guild_id): Path<u64>,
-) -> AppResult<Json<Vec<Role>>> {
+) -> APIResult<Json<Vec<Role>>> {
     if !permission_checker(Arc::clone(&state), guild_id, token.user_id).await? {
-        return Err(anyhow::anyhow!("You don't have permission to access this guild").into());
+        return Err(APIError::forbitten(
+            "You don't have permission to access this guild",
+        ));
     }
     let roles = {
         let mut conn = state.redis.get().await?;
@@ -254,9 +256,11 @@ pub async fn get_guild_text_channels(
     State(state): State<Arc<AppState>>,
     token: Token,
     Path(guild_id): Path<u64>,
-) -> AppResult<Json<Vec<Channel>>> {
+) -> APIResult<Json<Vec<Channel>>> {
     if !permission_checker(Arc::clone(&state), guild_id, token.user_id).await? {
-        return Err(anyhow::anyhow!("You don't have permission to access this guild").into());
+        return Err(APIError::forbitten(
+            "You don't have permission to access this guild",
+        ));
     }
     let channels = {
         let mut conn = state.redis.get().await?;
@@ -302,12 +306,14 @@ pub async fn set_guild_general_settings(
     token: Token,
     Path(guild_id): Path<u64>,
     Json(body): Json<GuildGeneralSettings>,
-) -> AppResult<()> {
+) -> APIResult<()> {
     let role_id = body.role_id.parse::<i64>()?;
     let channel_id = body.channel_id.parse::<u64>()?;
 
     if !permission_checker(Arc::clone(&state), guild_id, token.user_id).await? {
-        return Err(anyhow::anyhow!("You don't have permission to access this guild").into());
+        return Err(APIError::forbitten(
+            "You don't have permission to access this guild",
+        ));
     }
 
     verify_db::add_guild(
