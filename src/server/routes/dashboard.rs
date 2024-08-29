@@ -402,7 +402,7 @@ pub async fn add_mail_address(
 pub struct ResponseGetAllMailAddress {
     mail: String,
     id: i64,
-    guild_id: i64,
+    guild_id: String,
 }
 
 pub async fn get_all_mail_addresses(
@@ -424,7 +424,7 @@ pub async fn get_all_mail_addresses(
             .map(|(id, mail)| ResponseGetAllMailAddress {
                 id: *id,
                 mail: mail.clone(),
-                guild_id: guild_id as i64,
+                guild_id: guild_id.to_string(),
             })
             .collect(),
     ))
