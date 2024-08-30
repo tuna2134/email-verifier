@@ -96,12 +96,14 @@ pub async fn verify_discord(
         if !pattern.is_match(user.email.as_ref().unwrap()) {
             return Err(APIError::badrequest("Mail is not match"));
         }
-        if enable_check_mail && !mail_db::exist_mail(
+        if enable_check_mail
+            && !mail_db::exist_mail(
                 &state.pool,
                 guild_id,
                 user.email.clone().unwrap_or("".to_string()),
             )
-            .await? {
+            .await?
+        {
             return Err(APIError::badrequest("Mail is not inside at list"));
         }
         state
