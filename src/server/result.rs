@@ -84,4 +84,11 @@ impl APIError {
             message: message.to_string(),
         }
     }
+
+    pub fn badrequest(message: &str) -> Self {
+        Self {
+            status: StatusCode::BAD_REQUEST,
+            message: message.to_string(),
+        }
+    }
 }

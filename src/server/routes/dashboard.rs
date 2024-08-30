@@ -300,6 +300,7 @@ pub struct GuildGeneralSettings {
     email_pattern: String,
     role_id: String,
     channel_id: String,
+    enable_check_mail: bool,
 }
 
 pub async fn set_guild_general_settings(
@@ -323,6 +324,7 @@ pub async fn set_guild_general_settings(
         body.email_pattern.clone(),
         role_id,
         channel_id as i64,
+        body.enable_check_mail,
     )
     .await?;
 
@@ -359,14 +361,16 @@ pub async fn get_guild_general_settings(
         ));
     }
 
-    let (email_pattern, role_id, channel_id) = verify_db::get_guild(&state.pool, guild_id as i64)
-        .await?
-        .ok_or_else(|| APIError::notfound("Not found"))?;
+    let (email_pattern, role_id, channel_id, enable_check_mail) =
+        verify_db::get_guild(&state.pool, guild_id as i64)
+            .await?
+            .ok_or_else(|| APIError::notfound("Not found"))?;
 
     Ok(Json(GuildGeneralSettings {
         email_pattern,
         role_id: role_id.to_string(),
         channel_id: channel_id.to_string(),
+        enable_check_mail,
     }))
 }
 

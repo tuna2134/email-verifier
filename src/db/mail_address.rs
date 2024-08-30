@@ -43,3 +43,19 @@ pub async fn delete_mail_address(pool: &SqlitePool, guild_id: i64, id: i64) -> a
 
     Ok(())
 }
+
+pub async fn exist_mail(pool: &SqlitePool, guild_id: i64, email: String) -> anyhow::Result<bool> {
+    let row = sqlx::query!(
+        r#"
+        SELECT COUNT(*) as count
+        FROM mail_address
+        WHERE guild_id = $1 AND email = $2
+        "#,
+        guild_id,
+        email
+    )
+    .fetch_one(pool)
+    .await?;
+
+    Ok(row.count == 1)
+}

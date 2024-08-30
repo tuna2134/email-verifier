@@ -1,5 +1,6 @@
+use crate::db::mail_address as mail_db;
 use crate::db::verify as db;
-use crate::server::result::AppResult;
+use crate::server::result::{APIResult, APIError};
 use crate::utils::state::AppState;
 
 use std::env;
@@ -20,8 +21,8 @@ static BASE_URL: Lazy<String> = Lazy::new(|| env::var("BASE_URL").unwrap());
 static DISCORD_CLIENT_SECRET: Lazy<String> =
     Lazy::new(|| env::var("DISCORD_CLIENT_SECRET").unwrap());
 
-pub async fn main_path() -> AppResult<String> {
-    Ok("Hello, world!".to_string())
+pub async fn main_path() -> String {
+    "Hello, world!".to_string()
 }
 
 #[derive(Deserialize)]
@@ -48,7 +49,7 @@ pub struct DiscordTokenResponse {
 pub async fn verify_discord(
     State(state): State<Arc<AppState>>,
     Json(query): Json<RequestVerifyDiscord>,
-) -> AppResult<Json<ResponseVerifyDiscord>> {
+) -> APIResult<Json<ResponseVerifyDiscord>> {
     let client = reqwest::Client::new();
     let response: DiscordTokenResponse = client
         .post("https://discord.com/api/v10/oauth2/token")
@@ -77,21 +78,34 @@ pub async fn verify_discord(
         if let Some((user_id, guild_id)) = data.split_once(':') {
             (user_id.to_string(), guild_id.to_string())
         } else {
-            return Err(anyhow::anyhow!("Invalid data").into());
+            return Err(APIError::badrequest("Invalid state"));
         }
     };
     let user_id = user_id.parse::<u64>().unwrap();
     if user.id.get() != user_id {
-        return Err(anyhow::anyhow!("Invalid user").into());
+        return Err(APIError::badrequest("Invalid user"));
     }
     let guild_id = guild_id.parse::<i64>().unwrap();
-    if let Some((email_pattern, role_id, _)) = db::get_guild(&state.pool, guild_id).await? {
+    if let Some((email_pattern, role_id, _, enable_check_mail)) =
+        db::get_guild(&state.pool, guild_id).await?
+    {
         if user.email.is_none() {
-            return Err(anyhow::anyhow!("User has no email").into());
+            return Err(APIError::badrequest("Email not found"));
         }
         let pattern = Regex::new(&email_pattern)?;
         if !pattern.is_match(user.email.as_ref().unwrap()) {
-            return Err(anyhow::anyhow!("Invalid email").into());
+            return Err(APIError::badrequest("Mail is not match"));
+        }
+        if enable_check_mail {
+            if !mail_db::exist_mail(
+                &state.pool,
+                guild_id,
+                user.email.clone().unwrap_or("".to_string()),
+            )
+            .await?
+            {
+                return Err(APIError::badrequest("Mail is not inside at list"));
+            }
         }
         state
             .http
