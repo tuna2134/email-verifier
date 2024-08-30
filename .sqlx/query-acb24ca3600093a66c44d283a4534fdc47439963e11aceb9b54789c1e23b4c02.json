@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM mail_address WHERE guild_id = ? AND id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "acb24ca3600093a66c44d283a4534fdc47439963e11aceb9b54789c1e23b4c02"
+}

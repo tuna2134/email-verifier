@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        INSERT INTO email_verify (guild_id, email_pattern, role_id, channel_id, enable_check_mail)\n        VALUES ($1, $2, $3, $4, $5)\n        ON CONFLICT (guild_id)\n        DO UPDATE SET email_pattern = $2, role_id = $3, channel_id = $4, enable_check_mail = $5\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "61f005a20297da21173b3d2ac1ea6a0a0078aba93267946acffe55f9073f2425"
+}
