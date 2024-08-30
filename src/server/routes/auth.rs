@@ -1,6 +1,6 @@
 use crate::db::mail_address as mail_db;
 use crate::db::verify as db;
-use crate::server::result::{APIResult, APIError};
+use crate::server::result::{APIError, APIResult};
 use crate::utils::state::AppState;
 
 use std::env;
