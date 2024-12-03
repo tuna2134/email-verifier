@@ -10,6 +10,7 @@ FROM gcr.io/distroless/cc-debian12
 
 WORKDIR /src/app
 
+COPY --from=builder /src/builder/target/release/*.so .
 COPY --from=builder /src/builder/target/release/email-verifier .
 
 CMD ["/src/app/email-verifier"]
