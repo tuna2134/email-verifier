@@ -6,7 +6,7 @@ ENV SQLX_OFFLINE=true
 COPY . .
 RUN cargo build --release
 
-FROM gcr.io/distroless/cc-debian12
+FROM debian
 
 WORKDIR /src/app
 
