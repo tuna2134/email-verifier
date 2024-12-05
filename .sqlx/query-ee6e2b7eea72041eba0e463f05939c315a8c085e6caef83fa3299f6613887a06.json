@@ -1,19 +1,22 @@
 {
-  "db_name": "SQLite",
+  "db_name": "PostgreSQL",
   "query": "\n        INSERT INTO mail_address (guild_id, email)\n        VALUES ($1, $2)\n        RETURNING id\n        ",
   "describe": {
     "columns": [
       {
-        "name": "id",
         "ordinal": 0,
-        "type_info": "Integer"
+        "name": "id",
+        "type_info": "Int4"
       }
     ],
     "parameters": {
-      "Right": 2
+      "Left": [
+        "Int8",
+        "Text"
+      ]
     },
     "nullable": [
-      true
+      false
     ]
   },
   "hash": "ee6e2b7eea72041eba0e463f05939c315a8c085e6caef83fa3299f6613887a06"

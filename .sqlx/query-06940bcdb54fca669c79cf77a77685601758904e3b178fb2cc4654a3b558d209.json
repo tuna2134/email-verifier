@@ -1,10 +1,14 @@
 {
-  "db_name": "SQLite",
+  "db_name": "PostgreSQL",
   "query": "\n        INSERT INTO token (user_id, nonce, access_token)\n        VALUES ($1, $2, $3)\n        ON CONFLICT (user_id)\n        DO UPDATE SET nonce = $2, access_token = $3\n        ",
   "describe": {
     "columns": [],
     "parameters": {
-      "Right": 3
+      "Left": [
+        "Int8",
+        "Text",
+        "Text"
+      ]
     },
     "nullable": []
   },

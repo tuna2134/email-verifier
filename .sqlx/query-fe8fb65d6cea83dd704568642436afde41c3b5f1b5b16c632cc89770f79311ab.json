@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT email_pattern, role_id, channel_id, enable_check_mail FROM email_verify WHERE guild_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "email_pattern",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "role_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "channel_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "enable_check_mail",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "fe8fb65d6cea83dd704568642436afde41c3b5f1b5b16c632cc89770f79311ab"
+}
