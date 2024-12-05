@@ -3,7 +3,7 @@ FROM rust:1.83 AS builder
 WORKDIR /src/builder
 
 RUN apt-get update \
-    && apt-get install -y ldd gcc
+    && apt-get install -y lld clang
 
 ENV SQLX_OFFLINE=true
 COPY . .
