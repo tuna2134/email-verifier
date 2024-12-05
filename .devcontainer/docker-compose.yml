@@ -23,6 +23,7 @@ services:
     
     environment:
       DATABASE_URL: postgres://postgres:postgres@db/postgres
+      REDIS_URL: redis://redis:6379
 
     # Use "forwardPorts" in **devcontainer.json** to forward an app port locally. 
     # (Adding the "ports" property to this file will not forward from a Codespace.)
@@ -43,6 +44,8 @@ services:
   
   redis:
     image: redis
+    networks:
+      - main
 
 networks:
   main:
