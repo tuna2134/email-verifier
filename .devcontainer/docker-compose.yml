@@ -8,14 +8,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    env_file:
-        # Ensure that the variables in .env match the same variables in devcontainer.json
-        - .env
 
     volumes:
       - ../..:/workspaces:cached
 
-    # Overrides default command so things don't shut down after the process ends.
     command: sleep infinity
 
     networks:
@@ -25,22 +21,19 @@ services:
       DATABASE_URL: postgres://postgres:postgres@db/postgres
       REDIS_URL: redis://redis:6379
 
-    # Use "forwardPorts" in **devcontainer.json** to forward an app port locally. 
-    # (Adding the "ports" property to this file will not forward from a Codespace.)
-
   db:
     image: postgres:17.2
     restart: unless-stopped
     volumes:
       - postgres-data:/var/lib/postgresql/data
     env_file:
-        # Ensure that the variables in .env match the same variables in devcontainer.json
-        - .env
+      - .env
     networks:
       - main
-
-    # Add "forwardPorts": ["5432"] to **devcontainer.json** to forward PostgreSQL locally.
-    # (Adding the "ports" property to this file will not forward from a Codespace.)
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
   
   redis:
     image: redis
