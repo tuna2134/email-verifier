@@ -1,10 +1,16 @@
 {
-  "db_name": "SQLite",
+  "db_name": "PostgreSQL",
   "query": "\n        INSERT INTO email_verify (guild_id, email_pattern, role_id, channel_id, enable_check_mail)\n        VALUES ($1, $2, $3, $4, $5)\n        ON CONFLICT (guild_id)\n        DO UPDATE SET email_pattern = $2, role_id = $3, channel_id = $4, enable_check_mail = $5\n        ",
   "describe": {
     "columns": [],
     "parameters": {
-      "Right": 5
+      "Left": [
+        "Int8",
+        "Text",
+        "Int8",
+        "Int8",
+        "Bool"
+      ]
     },
     "nullable": []
   },

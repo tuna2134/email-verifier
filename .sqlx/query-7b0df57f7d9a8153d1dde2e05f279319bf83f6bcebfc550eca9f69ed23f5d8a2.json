@@ -1,16 +1,18 @@
 {
-  "db_name": "SQLite",
+  "db_name": "PostgreSQL",
   "query": "\n        SELECT access_token\n        FROM token\n        WHERE user_id = $1\n        ",
   "describe": {
     "columns": [
       {
-        "name": "access_token",
         "ordinal": 0,
+        "name": "access_token",
         "type_info": "Text"
       }
     ],
     "parameters": {
-      "Right": 1
+      "Left": [
+        "Int8"
+      ]
     },
     "nullable": [
       false

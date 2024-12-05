@@ -1,19 +1,22 @@
 {
-  "db_name": "SQLite",
+  "db_name": "PostgreSQL",
   "query": "\n        SELECT COUNT(*) as count\n        FROM token\n        WHERE user_id = $1 AND nonce = $2\n        ",
   "describe": {
     "columns": [
       {
-        "name": "count",
         "ordinal": 0,
-        "type_info": "Integer"
+        "name": "count",
+        "type_info": "Int8"
       }
     ],
     "parameters": {
-      "Right": 2
+      "Left": [
+        "Int8",
+        "Text"
+      ]
     },
     "nullable": [
-      false
+      null
     ]
   },
   "hash": "71d93507f45655a119b18165c496c047fbd10e56973cb79e64764d3baa7d5d35"
