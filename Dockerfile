@@ -2,6 +2,9 @@ FROM rust:1.83 AS builder
 
 WORKDIR /src/builder
 
+RUN apt-get update \
+    && apt-get install -y gcc
+
 ENV SQLX_OFFLINE=true
 COPY . .
 RUN cargo build --release
