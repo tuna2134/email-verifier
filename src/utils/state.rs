@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
 use bb8_redis::{bb8::Pool, RedisConnectionManager};
-use sqlx::SqlitePool;
+use sqlx::PgPool;
 use twilight_http::{client::InteractionClient, Client as HttpClient};
 use twilight_model::id::{marker::ApplicationMarker, Id};
 
 pub struct AppState {
-    pub pool: Arc<SqlitePool>,
+    pub pool: Arc<PgPool>,
     pub http: Arc<HttpClient>,
     pub redis: Arc<Pool<RedisConnectionManager>>,
     pub application_id: Id<ApplicationMarker>,
@@ -18,7 +18,7 @@ impl AppState {
         redis_uri: String,
         discord_token: String,
     ) -> anyhow::Result<Self> {
-        let pool = SqlitePool::connect(&database_uri).await?;
+        let pool = PgPool::connect(&database_uri).await?;
         sqlx::migrate!().run(&pool).await?;
         tracing::info!("Connect to database");
 

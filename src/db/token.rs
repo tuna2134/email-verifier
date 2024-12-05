@@ -1,7 +1,7 @@
-use sqlx::SqlitePool;
+use sqlx::PgPool;
 
 pub async fn set_token(
-    pool: &SqlitePool,
+    pool: &PgPool,
     user_id: i64,
     nonce: String,
     access_token: String,
@@ -23,7 +23,7 @@ pub async fn set_token(
     Ok(())
 }
 
-pub async fn get_access_token(pool: &SqlitePool, user_id: i64) -> anyhow::Result<String> {
+pub async fn get_access_token(pool: &PgPool, user_id: i64) -> anyhow::Result<String> {
     let row = sqlx::query!(
         r#"
         SELECT access_token
@@ -38,7 +38,7 @@ pub async fn get_access_token(pool: &SqlitePool, user_id: i64) -> anyhow::Result
     Ok(row.access_token)
 }
 
-pub async fn exist_token(pool: &SqlitePool, user_id: i64, nonce: String) -> anyhow::Result<bool> {
+pub async fn exist_token(pool: &PgPool, user_id: i64, nonce: String) -> anyhow::Result<bool> {
     let row = sqlx::query!(
         r#"
         SELECT COUNT(*) as count
@@ -51,5 +51,5 @@ pub async fn exist_token(pool: &SqlitePool, user_id: i64, nonce: String) -> anyh
     .fetch_one(pool)
     .await?;
 
-    Ok(row.count == 1)
+    Ok(row.count == Some(1))
 }

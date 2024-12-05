@@ -1,7 +1,7 @@
-use sqlx::SqlitePool;
+use sqlx::PgPool;
 
 pub async fn add_guild(
-    pool: &SqlitePool,
+    pool: &PgPool,
     guild_id: i64,
     email_pattern: String,
     role_id: i64,
@@ -28,11 +28,11 @@ pub async fn add_guild(
 }
 
 pub async fn get_guild(
-    pool: &SqlitePool,
+    pool: &PgPool,
     guild_id: i64,
 ) -> anyhow::Result<Option<(String, i64, i64, bool)>> {
     let row = sqlx::query!(
-        "SELECT email_pattern, role_id, channel_id, enable_check_mail FROM email_verify WHERE guild_id = ?",
+        "SELECT email_pattern, role_id, channel_id, enable_check_mail FROM email_verify WHERE guild_id = $1",
         guild_id
     )
     .fetch_optional(pool)
