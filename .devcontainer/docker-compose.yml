@@ -22,7 +22,7 @@ services:
       REDIS_URL: redis://redis:6379
 
   db:
-    image: postgres:17.2
+    image: postgres:17.11
     restart: unless-stopped
     volumes:
       - postgres-data:/var/lib/postgresql/data
